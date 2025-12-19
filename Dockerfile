@@ -1,10 +1,12 @@
-# Stage 1: Build the application using Maven
+# Stage 1: Build - Uses Maven to compile the code
 FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run the application using a stable JDK 17 image
+# Stage 2: Run - Uses a stable JRE 17 image
 FROM eclipse-temurin:17-jre-jammy
-COPY --from=build /target/*.jar app.jar
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
