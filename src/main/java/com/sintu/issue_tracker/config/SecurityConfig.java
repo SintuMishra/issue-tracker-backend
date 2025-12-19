@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**").permitAll()
                 
                 // Use hasRole or hasAuthority based on how your User model returns authorities
+                .requestMatchers("/api/tickets/**").hasAnyAuthority("STUDENT", "ROLE_STUDENT", "ADMIN", "ROLE_ADMIN")
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
                 .requestMatchers("/api/student/**").hasAnyAuthority("STUDENT", "ROLE_STUDENT")
                 
