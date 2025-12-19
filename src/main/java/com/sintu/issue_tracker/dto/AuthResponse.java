@@ -1,14 +1,15 @@
 package com.sintu.issue_tracker.dto;
 
-import com.sintu.issue_tracker.model.Role;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class AuthResponse {
-    private Long id;
+    private String token; // The frontend looks for "user.token"
     private String name;
-    private String email;
-    private Role role;
+    private String role;
+    private Long id;
 }

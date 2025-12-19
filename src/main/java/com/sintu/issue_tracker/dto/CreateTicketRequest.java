@@ -1,16 +1,20 @@
 package com.sintu.issue_tracker.dto;
 
-import com.sintu.issue_tracker.model.TicketPriority;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonProperty; // Import this!
+import com.sintu.issue_tracker.model.Priority;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class CreateTicketRequest {
     private String title;
     private String description;
     private String category;
-    private String location;
-    private TicketPriority priority;
-    private Long createdByUserId;   // for now, pass user id from frontend
+    
+    // 👇 The fix: Map JSON "block" to Java "blockName"
+    @JsonProperty("block") 
+    private String blockName; 
+
+    private String roomNo;
+    
+    private Priority priority; 
 }

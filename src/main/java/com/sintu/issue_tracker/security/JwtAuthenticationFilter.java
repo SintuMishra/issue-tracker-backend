@@ -1,0 +1,85 @@
+package com.sintu.issue_tracker.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+        
+        // DEBUG: Print the requested URL
+        System.out.println("Processing Request: " + request.getRequestURI());
+
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
+
+        // 1. Check if header exists
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("❌ No valid Authorization header found (Anonymous user)");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2. Extract token
+        jwt = authHeader.substring(7);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+            System.out.println("✅ Token found for User: " + userEmail);
+        } catch (Exception e) {
+            System.out.println("❌ Failed to extract user from token: " + e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 3. Authenticate against DB
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("✅ Authentication SUCCESS for: " + userEmail);
+                } else {
+                    System.out.println("❌ Token invalid for user: " + userEmail);
+                }
+            } catch (Exception e) {
+                System.out.println("❌ Database User Lookup Failed: " + e.getMessage());
+            }
+        }
+        
+        filterChain.doFilter(request, response);
+    }
+}

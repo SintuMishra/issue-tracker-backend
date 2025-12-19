@@ -1,18 +1,18 @@
 package com.sintu.issue_tracker.service;
 
 import com.sintu.issue_tracker.dto.AssignTicketRequest;
-import com.sintu.issue_tracker.dto.TicketResponseDto;
-import com.sintu.issue_tracker.dto.TicketStatsDto;
+import com.sintu.issue_tracker.dto.TicketResponse;
 import com.sintu.issue_tracker.model.Ticket;
 import com.sintu.issue_tracker.model.TicketStatus;
 import com.sintu.issue_tracker.model.User;
 import com.sintu.issue_tracker.repository.TicketRepository;
 import com.sintu.issue_tracker.repository.UserRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;  // <-- add this
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminTicketService {
@@ -20,94 +20,96 @@ public class AdminTicketService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
 
-    public AdminTicketService(TicketRepository ticketRepository,
-                              UserRepository userRepository) {
+    public AdminTicketService(TicketRepository ticketRepository, UserRepository userRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
     }
 
-    // OLD method (still can be used if you want paging)
-    public Page<TicketResponseDto> getAllTickets(String status,
-                                                 Pageable pageable) {
-        if (status != null && !status.isEmpty()) {
-            TicketStatus st = TicketStatus.valueOf(status);
-            return ticketRepository.findByStatus(st, pageable)
-                    .map(this::toDto);
-        }
-        return ticketRepository.findAll(pageable)
-                .map(this::toDto);
-    }
+    public List<TicketResponse> getAllTicketsSimple(String status) {
+        List<Ticket> tickets;
 
-    // NEW: simple list for React admin table
-    public List<TicketResponseDto> getAllTicketsSimple(String status) {
         if (status != null && !status.isEmpty()) {
-            TicketStatus st = TicketStatus.valueOf(status);
-            return ticketRepository
-                    .findByStatus(st, Pageable.unpaged())
-                    .map(this::toDto)
-                    .toList();
+            try {
+                TicketStatus ts = TicketStatus.valueOf(status.toUpperCase());
+                tickets = ticketRepository.findAll().stream()
+                        .filter(t -> t.getStatus() == ts)
+                        .collect(Collectors.toList());
+            } catch (IllegalArgumentException e) {
+                tickets = ticketRepository.findAll();
+            }
+        } else {
+            tickets = ticketRepository.findAll();
         }
 
-        return ticketRepository.findAll().stream()
-                .map(this::toDto)
-                .toList();
+        return tickets.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
-    // 2) Assign ticket to staff
-    public TicketResponseDto assignTicket(Long ticketId,
-                                          AssignTicketRequest request) {
+    // 👇 FIXED: Assign logic now saves correctly and updates status
+    public TicketResponse assignTicket(Long ticketId, AssignTicketRequest request) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
         User staff = userRepository.findById(request.getStaffUserId())
                 .orElseThrow(() -> new RuntimeException("Staff user not found"));
 
+        // 1. Link the staff member
         ticket.setAssignedTo(staff);
+        
+        // 2. FORCE status to ASSIGNED (User wants to see this change!)
+        ticket.setStatus(TicketStatus.ASSIGNED);
 
-        if (request.getStatus() != null) {
-            ticket.setStatus(request.getStatus());
-        }
-
+        // 3. Save to Database
         Ticket saved = ticketRepository.save(ticket);
-        return toDto(saved);
+        return mapToResponse(saved);
     }
 
-    // 3) Basic stats for dashboard cards
-    public TicketStatsDto getStats() {
-        TicketStatsDto dto = new TicketStatsDto();
-        dto.setTotalTickets(ticketRepository.count());
-        dto.setOpenTickets(ticketRepository.countByStatus(TicketStatus.OPEN));
-        dto.setInProgressTickets(ticketRepository.countByStatus(TicketStatus.IN_PROGRESS));
-        dto.setResolvedTickets(ticketRepository.countByStatus(TicketStatus.RESOLVED));
-        dto.setClosedTickets(ticketRepository.countByStatus(TicketStatus.CLOSED));
-        return dto;
+    public TicketResponse updateStatus(Long ticketId, TicketStatus newStatus) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        ticket.setStatus(newStatus);
+        Ticket saved = ticketRepository.save(ticket);
+        return mapToResponse(saved);
     }
 
-    public TicketResponseDto updateStatus(Long ticketId, TicketStatus newStatus) {
-    Ticket ticket = ticketRepository.findById(ticketId)
-            .orElseThrow(() -> new RuntimeException("Ticket not found"));
-
-    ticket.setStatus(newStatus);
-    Ticket saved = ticketRepository.save(ticket);
-    return toDto(saved);
+    // 👇 FIXED: Real stats instead of "0L"
+    public Map<String, Long> getStats() {
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("totalTickets", ticketRepository.count());
+        
+        // Count actual tickets by status
+        stats.put("openTickets", countByStatus(TicketStatus.OPEN));
+        stats.put("assignedTickets", countByStatus(TicketStatus.ASSIGNED)); 
+        stats.put("inProgressTickets", countByStatus(TicketStatus.IN_PROGRESS));
+        stats.put("resolvedTickets", countByStatus(TicketStatus.RESOLVED));
+        stats.put("closedTickets", countByStatus(TicketStatus.CLOSED));
+        
+        return stats;
+    }
+    
+    // Helper for stats
+    private Long countByStatus(TicketStatus status) {
+        return ticketRepository.findAll().stream()
+                .filter(t -> t.getStatus() == status)
+                .count();
     }
 
-    // Helper: convert Ticket entity -> TicketResponseDto
-    private TicketResponseDto toDto(Ticket ticket) {
-        TicketResponseDto dto = new TicketResponseDto();
-        dto.setId(ticket.getId());
-        dto.setTitle(ticket.getTitle());
-        dto.setDescription(ticket.getDescription());
-        dto.setCategory(ticket.getCategory());
-        dto.setLocation(ticket.getLocation());
-        dto.setPriority(ticket.getPriority());
-        dto.setStatus(ticket.getStatus());
-        dto.setCreatedById(ticket.getCreatedBy().getId());
-        dto.setAssignedToId(
-                ticket.getAssignedTo() != null ? ticket.getAssignedTo().getId() : null
-        );
-        dto.setCreatedAt(ticket.getCreatedAt().toString());
-        dto.setUpdatedAt(ticket.getUpdatedAt().toString());
-        return dto;
+    private TicketResponse mapToResponse(Ticket t) {
+        return TicketResponse.builder()
+                .id(t.getId())
+                .title(t.getTitle())
+                .description(t.getDescription())
+                .category(t.getCategory())
+                .blockName(t.getBlockName()) 
+                .roomNo(t.getRoomNo())
+                .location(t.getLocation())
+                .priority(t.getPriority())
+                .status(t.getStatus())
+                .createdAt(t.getCreatedAt())
+                .createdByName(t.getCreatedBy() != null ? t.getCreatedBy().getName() : "Unknown")
+                .assignedToName(t.getAssignedTo() != null ? t.getAssignedTo().getName() : null)
+                .build();
     }
 }

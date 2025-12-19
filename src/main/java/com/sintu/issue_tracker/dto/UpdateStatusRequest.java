@@ -1,16 +1,9 @@
 package com.sintu.issue_tracker.dto;
 
-import com.sintu.issue_tracker.model.TicketStatus;
+import lombok.Data;
 
+@Data
 public class UpdateStatusRequest {
-
-    private TicketStatus status;
-
-    public TicketStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(TicketStatus status) {
-        this.status = status;
-    }
+    // 👇 Change this to String so the Controller can handle case-conversion
+    private String status;
 }

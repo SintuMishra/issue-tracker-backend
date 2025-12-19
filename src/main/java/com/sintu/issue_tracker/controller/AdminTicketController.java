@@ -1,17 +1,18 @@
 package com.sintu.issue_tracker.controller;
 
 import com.sintu.issue_tracker.dto.AssignTicketRequest;
-import com.sintu.issue_tracker.dto.TicketResponseDto;
-import com.sintu.issue_tracker.dto.TicketStatsDto;
-import com.sintu.issue_tracker.dto.UpdateStatusRequest;
+import com.sintu.issue_tracker.dto.TicketResponse;
+import com.sintu.issue_tracker.model.TicketStatus;
 import com.sintu.issue_tracker.service.AdminTicketService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/tickets")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class AdminTicketController {
 
     private final AdminTicketService adminTicketService;
@@ -20,36 +21,33 @@ public class AdminTicketController {
         this.adminTicketService = adminTicketService;
     }
 
-    // GET /api/admin/tickets?status=OPEN
+    // 1. Get All Tickets (With optional status filter)
     @GetMapping
-    public List<TicketResponseDto> getAllTickets(
-            @RequestParam(required = false) String status
-    ) {
-        return adminTicketService.getAllTicketsSimple(status);
+    public ResponseEntity<List<TicketResponse>> getAllTickets(@RequestParam(required = false) String status) {
+        return ResponseEntity.ok(adminTicketService.getAllTicketsSimple(status));
     }
 
-    // PUT /api/admin/tickets/{id}/assign
+    // 2. Assign a Ticket to Staff
     @PutMapping("/{id}/assign")
-    public TicketResponseDto assignTicket(
+    public ResponseEntity<TicketResponse> assignTicket(
             @PathVariable Long id,
             @RequestBody AssignTicketRequest request
     ) {
-        return adminTicketService.assignTicket(id, request);
+        return ResponseEntity.ok(adminTicketService.assignTicket(id, request));
     }
 
-    // PUT /api/admin/tickets/{id}/status
+    // 3. Update Ticket Status
     @PutMapping("/{id}/status")
-    public TicketResponseDto updateStatus(
-        @PathVariable Long id,
-        @RequestBody UpdateStatusRequest request
+    public ResponseEntity<TicketResponse> updateStatus(
+            @PathVariable Long id,
+            @RequestParam TicketStatus status
     ) {
-        return adminTicketService.updateStatus(id, request.getStatus());
+        return ResponseEntity.ok(adminTicketService.updateStatus(id, status));
     }
 
-    // GET /api/admin/tickets/stats
-    // GET /api/admin/tickets/stats
-@GetMapping("/stats")
-public TicketStatsDto getStats() {
-    return adminTicketService.getStats();
-}
+    // 4. Get Dashboard Stats
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Long>> getStats() {
+        return ResponseEntity.ok(adminTicketService.getStats());
+    }
 }
