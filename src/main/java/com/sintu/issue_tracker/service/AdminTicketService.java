@@ -1,3 +1,4 @@
+// AdminTicketService.java
 package com.sintu.issue_tracker.service;
 
 import com.sintu.issue_tracker.dto.AssignTicketRequest;
@@ -7,12 +8,13 @@ import com.sintu.issue_tracker.model.TicketStatus;
 import com.sintu.issue_tracker.model.User;
 import com.sintu.issue_tracker.repository.TicketRepository;
 import com.sintu.issue_tracker.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class AdminTicketService {
@@ -25,28 +27,26 @@ public class AdminTicketService {
         this.userRepository = userRepository;
     }
 
-    public List<TicketResponse> getAllTicketsSimple(String status) {
-        List<Ticket> tickets;
+    // Paged list for admin (with optional status filter)
+    public Page<TicketResponse> getAllTicketsSimple(String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size); // 0-based page index
+        Page<Ticket> ticketPage;
 
         if (status != null && !status.isEmpty()) {
             try {
                 TicketStatus ts = TicketStatus.valueOf(status.toUpperCase());
-                tickets = ticketRepository.findAll().stream()
-                        .filter(t -> t.getStatus() == ts)
-                        .collect(Collectors.toList());
+                ticketPage = ticketRepository.findByStatus(ts, pageable);
             } catch (IllegalArgumentException e) {
-                tickets = ticketRepository.findAll();
+                ticketPage = ticketRepository.findAll(pageable);
             }
         } else {
-            tickets = ticketRepository.findAll();
+            ticketPage = ticketRepository.findAll(pageable);
         }
 
-        return tickets.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return ticketPage.map(this::mapToResponse);
     }
 
-    // 👇 FIXED: Assign logic now saves correctly and updates status
+    // Assign logic
     public TicketResponse assignTicket(Long ticketId, AssignTicketRequest request) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
@@ -54,13 +54,9 @@ public class AdminTicketService {
         User staff = userRepository.findById(request.getStaffUserId())
                 .orElseThrow(() -> new RuntimeException("Staff user not found"));
 
-        // 1. Link the staff member
         ticket.setAssignedTo(staff);
-        
-        // 2. FORCE status to ASSIGNED (User wants to see this change!)
         ticket.setStatus(TicketStatus.ASSIGNED);
 
-        // 3. Save to Database
         Ticket saved = ticketRepository.save(ticket);
         return mapToResponse(saved);
     }
@@ -74,26 +70,16 @@ public class AdminTicketService {
         return mapToResponse(saved);
     }
 
-    // 👇 FIXED: Real stats instead of "0L"
+    // Stats
     public Map<String, Long> getStats() {
         Map<String, Long> stats = new HashMap<>();
         stats.put("totalTickets", ticketRepository.count());
-        
-        // Count actual tickets by status
-        stats.put("openTickets", countByStatus(TicketStatus.OPEN));
-        stats.put("assignedTickets", countByStatus(TicketStatus.ASSIGNED)); 
-        stats.put("inProgressTickets", countByStatus(TicketStatus.IN_PROGRESS));
-        stats.put("resolvedTickets", countByStatus(TicketStatus.RESOLVED));
-        stats.put("closedTickets", countByStatus(TicketStatus.CLOSED));
-        
+        stats.put("openTickets", ticketRepository.countByStatus(TicketStatus.OPEN));
+        stats.put("assignedTickets", ticketRepository.countByStatus(TicketStatus.ASSIGNED));
+        stats.put("inProgressTickets", ticketRepository.countByStatus(TicketStatus.IN_PROGRESS));
+        stats.put("resolvedTickets", ticketRepository.countByStatus(TicketStatus.RESOLVED));
+        stats.put("closedTickets", ticketRepository.countByStatus(TicketStatus.CLOSED));
         return stats;
-    }
-    
-    // Helper for stats
-    private Long countByStatus(TicketStatus status) {
-        return ticketRepository.findAll().stream()
-                .filter(t -> t.getStatus() == status)
-                .count();
     }
 
     private TicketResponse mapToResponse(Ticket t) {
@@ -102,7 +88,7 @@ public class AdminTicketService {
                 .title(t.getTitle())
                 .description(t.getDescription())
                 .category(t.getCategory())
-                .blockName(t.getBlockName()) 
+                .blockName(t.getBlockName())
                 .roomNo(t.getRoomNo())
                 .location(t.getLocation())
                 .priority(t.getPriority())

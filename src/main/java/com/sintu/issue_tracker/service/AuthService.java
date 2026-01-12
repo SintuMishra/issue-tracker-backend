@@ -15,14 +15,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+    private static final String ADMIN_SECRET_CODE = "MISHRA_BOSS_2025";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, 
-                       PasswordEncoder passwordEncoder, 
-                       JwtService jwtService, 
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService,
                        AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -32,30 +34,25 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new IllegalArgumentException("Email already exists");
         }
 
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        
-        // 🔒 SECURITY CHECK (Fixed Type Mismatch)
-        // Since request.getRole() is an Enum, we compare it directly
-        if (request.getRole() == Role.ADMIN) {
-            String SECRET_CODE = "MISHRA_BOSS_2025"; 
 
-            // Check if key is provided and correct
-            if (request.getAdminKey() == null || !request.getAdminKey().equals(SECRET_CODE)) {
-                throw new RuntimeException("Security Alert: Invalid Admin Secret Key!");
+        // Role + admin key check
+        if (request.getRole() == Role.ADMIN) {
+            if (request.getAdminKey() == null ||
+                !ADMIN_SECRET_CODE.equals(request.getAdminKey())) {
+                throw new IllegalArgumentException("Invalid admin security code");
             }
             user.setRole(Role.ADMIN);
         } else {
-            // Default to Student
             user.setRole(Role.STUDENT);
         }
 
-        // These now work because we updated RegisterRequest.java
         user.setDepartment(request.getDepartment());
         user.setHostel(request.getHostel());
 
@@ -67,15 +64,20 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
+        try {
+            authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
+                    request.getEmail(),
+                    request.getPassword()
                 )
-        );
+            );
+        } catch (Exception e) {
+            // unify invalid credentials message
+            throw new IllegalArgumentException("Invalid email or password");
+        }
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String jwtToken = jwtService.generateToken(user);
 
@@ -84,6 +86,6 @@ public class AuthService {
 
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
     }
 }

@@ -2,12 +2,12 @@ package com.sintu.issue_tracker.controller;
 
 import com.sintu.issue_tracker.dto.AssignTicketRequest;
 import com.sintu.issue_tracker.dto.TicketResponse;
-import com.sintu.issue_tracker.model.TicketStatus;
+import com.sintu.issue_tracker.dto.UpdateTicketStatusRequest;
 import com.sintu.issue_tracker.service.AdminTicketService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,10 +21,14 @@ public class AdminTicketController {
         this.adminTicketService = adminTicketService;
     }
 
-    // 1. Get All Tickets (With optional status filter)
+    // 1. Get All Tickets (With optional status filter + pagination)
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getAllTickets(@RequestParam(required = false) String status) {
-        return ResponseEntity.ok(adminTicketService.getAllTicketsSimple(status));
+    public ResponseEntity<Page<TicketResponse>> getAllTickets(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(adminTicketService.getAllTicketsSimple(status, page, size));
     }
 
     // 2. Assign a Ticket to Staff
@@ -36,13 +40,15 @@ public class AdminTicketController {
         return ResponseEntity.ok(adminTicketService.assignTicket(id, request));
     }
 
-    // 3. Update Ticket Status
+    // 3. Update Ticket Status (JSON body)
     @PutMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateStatus(
             @PathVariable Long id,
-            @RequestParam TicketStatus status
+            @RequestBody UpdateTicketStatusRequest request
     ) {
-        return ResponseEntity.ok(adminTicketService.updateStatus(id, status));
+        return ResponseEntity.ok(
+                adminTicketService.updateStatus(id, request.getStatus())
+        );
     }
 
     // 4. Get Dashboard Stats

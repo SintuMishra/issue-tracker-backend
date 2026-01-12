@@ -1,0 +1,137 @@
+.
+├── Dockerfile
+├── HELP.md
+├── backend-tree.txt
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── sintu
+│   │   │           └── issue_tracker
+│   │   │               ├── IssueTrackerApplication.java
+│   │   │               ├── PasswordHashGenerator.java
+│   │   │               ├── config
+│   │   │               │   ├── ApplicationConfig.java
+│   │   │               │   ├── CorsConfig.java
+│   │   │               │   └── SecurityConfig.java
+│   │   │               ├── controller
+│   │   │               │   ├── AdminTicketController.java
+│   │   │               │   ├── AuthController.java
+│   │   │               │   ├── HealthController.java
+│   │   │               │   └── TicketController.java
+│   │   │               ├── dto
+│   │   │               │   ├── AssignTicketRequest.java
+│   │   │               │   ├── AuthResponse.java
+│   │   │               │   ├── CreateTicketRequest.java
+│   │   │               │   ├── LoginRequest.java
+│   │   │               │   ├── RegisterRequest.java
+│   │   │               │   ├── TicketResponse.java
+│   │   │               │   ├── TicketResponseDto.java
+│   │   │               │   ├── TicketStatsDto.java
+│   │   │               │   ├── UpdateStatusRequest.java
+│   │   │               │   └── UpdateTicketStatusRequest.java
+│   │   │               ├── model
+│   │   │               │   ├── Priority.java
+│   │   │               │   ├── Role.java
+│   │   │               │   ├── Ticket.java
+│   │   │               │   ├── TicketPriority.java
+│   │   │               │   ├── TicketStatus.java
+│   │   │               │   └── User.java
+│   │   │               ├── repository
+│   │   │               │   ├── TicketRepository.java
+│   │   │               │   └── UserRepository.java
+│   │   │               ├── security
+│   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │               │   └── JwtService.java
+│   │   │               └── service
+│   │   │                   ├── AdminTicketService.java
+│   │   │                   ├── AuthService.java
+│   │   │                   ├── EmailService.java
+│   │   │                   └── TicketService.java
+│   │   └── resources
+│   │       ├── application.properties
+│   │       ├── static
+│   │       └── templates
+│   └── test
+│       └── java
+│           └── com
+│               └── sintu
+│                   └── issue_tracker
+│                       └── IssueTrackerApplicationTests.java
+└── target
+    ├── classes
+    │   ├── application.properties
+    │   └── com
+    │       └── sintu
+    │           └── issue_tracker
+    │               ├── IssueTrackerApplication.class
+    │               ├── PasswordHashGenerator.class
+    │               ├── config
+    │               │   ├── ApplicationConfig.class
+    │               │   ├── CorsConfig.class
+    │               │   └── SecurityConfig.class
+    │               ├── controller
+    │               │   ├── AdminTicketController.class
+    │               │   ├── AuthController.class
+    │               │   ├── HealthController.class
+    │               │   └── TicketController.class
+    │               ├── dto
+    │               │   ├── AssignTicketRequest.class
+    │               │   ├── AuthResponse.class
+    │               │   ├── CreateTicketRequest.class
+    │               │   ├── LoginRequest.class
+    │               │   ├── RegisterRequest.class
+    │               │   ├── TicketResponse$TicketResponseBuilder.class
+    │               │   ├── TicketResponse.class
+    │               │   ├── TicketResponseDto.class
+    │               │   ├── TicketStatsDto.class
+    │               │   ├── UpdateStatusRequest.class
+    │               │   └── UpdateTicketStatusRequest.class
+    │               ├── model
+    │               │   ├── Priority.class
+    │               │   ├── Role.class
+    │               │   ├── Ticket$TicketBuilder.class
+    │               │   ├── Ticket.class
+    │               │   ├── TicketPriority.class
+    │               │   ├── TicketStatus.class
+    │               │   ├── User$UserBuilder.class
+    │               │   └── User.class
+    │               ├── repository
+    │               │   ├── TicketRepository.class
+    │               │   └── UserRepository.class
+    │               ├── security
+    │               │   ├── JwtAuthenticationFilter.class
+    │               │   └── JwtService.class
+    │               └── service
+    │                   ├── AdminTicketService.class
+    │                   ├── AuthService.class
+    │                   ├── EmailService.class
+    │                   └── TicketService.class
+    ├── generated-sources
+    │   └── annotations
+    ├── generated-test-sources
+    │   └── test-annotations
+    ├── issue-tracker-0.0.1-SNAPSHOT.jar
+    ├── issue-tracker-0.0.1-SNAPSHOT.jar.original
+    ├── maven-archiver
+    │   └── pom.properties
+    ├── maven-status
+    │   └── maven-compiler-plugin
+    │       ├── compile
+    │       │   └── default-compile
+    │       │       ├── createdFiles.lst
+    │       │       └── inputFiles.lst
+    │       └── testCompile
+    │           └── default-testCompile
+    │               ├── createdFiles.lst
+    │               └── inputFiles.lst
+    └── test-classes
+        └── com
+            └── sintu
+                └── issue_tracker
+                    └── IssueTrackerApplicationTests.class
+
+49 directories, 86 files
