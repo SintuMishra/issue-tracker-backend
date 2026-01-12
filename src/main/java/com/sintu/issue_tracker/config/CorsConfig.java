@@ -16,17 +16,21 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
-        // Allow Frontend
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        // ✅ Allow both Local development and Production Vercel URL
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173", 
+            "https://issue-tracker-frontend-two.vercel.app"
+        ));
         
-        // Allow standard HTTP methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
-        // 👇 CRITICAL: Allow the Authorization header!
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // ✅ Ensure all necessary headers are allowed
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
         
-        // Allow credentials (cookies/tokens)
         config.setAllowCredentials(true);
+
+        // Required so the frontend can read the Authorization header if needed
+        config.setExposedHeaders(List.of("Authorization"));
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
