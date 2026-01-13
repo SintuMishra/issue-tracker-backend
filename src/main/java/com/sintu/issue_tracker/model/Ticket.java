@@ -1,3 +1,4 @@
+// Ticket.java
 package com.sintu.issue_tracker.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

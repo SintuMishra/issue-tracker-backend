@@ -1,3 +1,4 @@
+// User.java
 package com.sintu.issue_tracker.model;
 
 import jakarta.persistence.*;

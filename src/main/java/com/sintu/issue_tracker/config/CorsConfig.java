@@ -1,3 +1,4 @@
+// CorsConfig.java
 package com.sintu.issue_tracker.config;
 
 import org.springframework.context.annotation.Bean;
