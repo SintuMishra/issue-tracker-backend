@@ -15,8 +15,6 @@ This is the robust REST API powering the Hostel Issue Tracker. It handles secure
 ## 🔐 Security Architecture
 The API uses **Spring Security** with **JWT (JSON Web Tokens)** for stateless authentication.
 
-
-
 1. **Authentication:** Users log in via `/api/auth/login` to receive a JWT.
 2. **Authorization:** The JWT must be included in the `Authorization: Bearer <token>` header for all protected routes.
 3. **RBAC:** Endpoints are restricted based on roles (`ROLE_STUDENT`, `ROLE_ADMIN`).
@@ -26,7 +24,7 @@ The API uses **Spring Security** with **JWT (JSON Web Tokens)** for stateless au
 ## 🏗️ Technical Highlights
 
 - **Custom CORS Configuration:** Seamlessly integrated with the Vercel-hosted frontend to allow secure cross-origin requests.
-- **DTO Pattern:** Implemented Data Transfer Objects to decouple the database layer from the REST layer, improving security and performance.
+- **DTO Pattern:** Implemented Data Transfer Objects to decouple the database layer from the REST layer.
 - **Global Exception Handling:** Centralized error management to provide consistent API responses.
 - **JPA/Hibernate:** Advanced mapping for complex relationships between Users and Tickets.
 
@@ -61,6 +59,24 @@ src/main/java/com/sintu/issue_tracker
 
 ---
 
+## 📊 Database Schema
+
+```mermaid
+erDiagram
+    USER ||--o{ TICKET : creates
+    USER {
+        long id PK
+        string username
+        string role "STUDENT / ADMIN"
+    }
+    TICKET {
+        long id PK
+        string title
+        string description
+        string status "OPEN / IN_PROGRESS / RESOLVED"
+        long user_id FK
+    }
+
 ## 🛠️ Local Development
 
 ### 1. Clone the repository
@@ -73,18 +89,14 @@ erDiagram
     USER {
         long id PK
         string username
-        string password
-        string role "STUDENT / ADMIN / STAFF"
+        string role "STUDENT / ADMIN"
     }
     TICKET {
         long id PK
         string title
         string description
         string status "OPEN / IN_PROGRESS / RESOLVED"
-        string priority "LOW / MEDIUM / HIGH"
-        string category
-        long user_id FK "Created By"
-        long assigned_to_id FK "Staff Member"
+        long user_id FK
     }
 
     Table,Primary Key,Key Fields,Relationships
