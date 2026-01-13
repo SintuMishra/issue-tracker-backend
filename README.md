@@ -28,4 +28,4 @@ cd issue-tracker-backend
 spring.datasource.username=postgres
 spring.datasource.password=YOUR_PASSWORD
 app.jwt.secret=YOUR_64_CHARACTER_RANDOM_SECRET
-app.admin.secret=MISHRA_BOSS
+app.admin.secret=MISHRA_BOSS_2025
