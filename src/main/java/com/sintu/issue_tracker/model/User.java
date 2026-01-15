@@ -33,7 +33,10 @@ public class User implements UserDetails {
     private String password;
     
     private String department; 
-    private String hostel;      
+    private String hostel;  
+    
+    private String specialization; // e.g., PLUMBER, ELECTRICIAN
+    private String staffId;       // Unique ID for the staff member
 
     @Enumerated(EnumType.STRING)
     private Role role; 
