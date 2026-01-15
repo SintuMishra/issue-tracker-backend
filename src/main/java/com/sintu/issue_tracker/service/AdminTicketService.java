@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.sintu.issue_tracker.model.Role;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,19 +48,25 @@ public class AdminTicketService {
         return ticketPage.map(this::mapToResponse);
     }
 
-    // Assign logic
+    // AdminTicketService.java
+
     public TicketResponse assignTicket(Long ticketId, AssignTicketRequest request) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        User staff = userRepository.findById(request.getStaffUserId())
-                .orElseThrow(() -> new RuntimeException("Staff user not found"));
+        // This now works because we updated the DTO above
+        User staff = userRepository.findByStaffId(request.getStaffId())
+                .orElseThrow(() -> new RuntimeException("Staff member not found with ID: " + request.getStaffId()));
+
+        // This now works because we imported com.sintu.issue_tracker.model.Role
+        if (staff.getRole() != Role.STAFF) {
+            throw new RuntimeException("User is not a Staff member");
+        }
 
         ticket.setAssignedTo(staff);
         ticket.setStatus(TicketStatus.ASSIGNED);
-
-        Ticket saved = ticketRepository.save(ticket);
-        return mapToResponse(saved);
+        
+        return mapToResponse(ticketRepository.save(ticket));
     }
 
     public TicketResponse updateStatus(Long ticketId, TicketStatus newStatus) {

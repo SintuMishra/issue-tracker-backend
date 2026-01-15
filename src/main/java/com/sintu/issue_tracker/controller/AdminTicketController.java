@@ -1,3 +1,4 @@
+// src/main/java/com/sintu/issue_tracker/controller/AdminTicketController.java
 package com.sintu.issue_tracker.controller;
 
 import com.sintu.issue_tracker.dto.AssignTicketRequest;

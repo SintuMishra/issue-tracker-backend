@@ -1,3 +1,4 @@
+// src/main/java/com/sintu/issue_tracker/config/SecurityConfig.java
 package com.sintu.issue_tracker.config;
 
 import com.sintu.issue_tracker.security.JwtAuthenticationFilter;
@@ -41,7 +42,7 @@ public class SecurityConfig {
                 
                 // Use hasRole or hasAuthority based on how your User model returns authorities
                 .requestMatchers("/api/tickets/**").hasAnyAuthority("STUDENT", "ROLE_STUDENT", "ADMIN", "ROLE_ADMIN")
-                .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/api/student/**").hasAnyAuthority("STUDENT", "ROLE_STUDENT")
                 
                 .anyRequest().authenticated()
